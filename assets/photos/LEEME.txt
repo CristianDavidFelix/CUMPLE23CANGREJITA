@@ -1,0 +1,4 @@
+Pon aqui las fotos reales: 01.jpg ... 06.jpg
+Que foto va en cada sitio y su texto: js/data/photos.js
+Recomendado: ~900 px de lado, JPG calidad 80.
+Si falta una foto, el juego muestra un marco vacio en su lugar (no se rompe).

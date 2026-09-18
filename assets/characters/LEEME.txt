@@ -1,0 +1,3 @@
+Opcional. Los personajes se dibujan por codigo (js/systems/TextureFactory.js).
+Colores de Sammy: js/data/playerConfig.js -> PLAYER_AVATAR.
+Foto real como retrato de dialogo: PLAYER_PORTRAIT en el mismo archivo.

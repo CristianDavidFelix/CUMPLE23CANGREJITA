@@ -1,0 +1,2 @@
+Los mapas son texto editable en js/data/maps.js (cada letra = un tile de 16x16).
+Despues de editarlos: node tools/validate.mjs

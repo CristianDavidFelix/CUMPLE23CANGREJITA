@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mystic Falls — Una historia para Sammy</title>
+
+<!-- viewport-fit=cover + user-scalable=no: evita que el navegador haga zoom o
+     rebote mientras se usa el joystick, y permite usar las safe areas del notch -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07080d" />
+<meta name="color-scheme" content="dark" />
+<meta name="description" content="A small, personal Mystic Falls adventure." />
+
+<!-- iOS: pantalla completa si se agrega a la pantalla de inicio -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2213%22 fill=%22%23f2e8c8%22/%3E%3Ccircle cx=%2221%22 cy=%2212%22 r=%2211%22 fill=%22%2307080d%22/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ============ CANVAS DEL JUEGO ============ -->
+<div id="game-container" aria-hidden="true"></div>
+
+<!-- ============ CAPA DE UI (DOM) ============ -->
+<div id="ui-layer">
+
+  <!-- ---- HUD superior ---- -->
+  <header id="hud" class="hidden">
+    <div id="hud-location" class="hud-pill"><span id="location-name">Mystic Falls</span></div>
+    <div id="hud-buttons">
+      <button id="btn-journal" class="icon-btn" aria-label="Abrir diario" title="Diario (J)">
+        <span class="icon-glyph">✦</span>
+      </button>
+      <button id="btn-pause" class="icon-btn" aria-label="Menu" title="Menu (Esc)">
+        <span class="icon-glyph">≡</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ---- Rastreador de misión ---- -->
+  <aside id="quest-tracker" class="hidden" role="status">
+    <h4 id="quest-tracker-title">—</h4>
+    <ul id="quest-tracker-list"></ul>
+  </aside>
+
+  <!-- ---- Cartel de lugar al entrar ---- -->
+  <div id="place-banner" class="hidden">
+    <div class="place-banner-line"></div>
+    <h2 id="place-banner-title"></h2>
+    <p id="place-banner-sub"></p>
+    <div class="place-banner-line"></div>
+  </div>
+
+  <!-- ---- Controles táctiles ---- -->
+  <div id="touch-controls" class="hidden">
+    <div id="joystick" aria-hidden="true">
+      <div id="joystick-base"></div>
+      <div id="joystick-thumb"></div>
+    </div>
+    <button id="btn-action" class="action-btn" aria-label="Interact">
+      <span id="action-glyph">E</span>
+      <span id="action-label"></span>
+    </button>
+  </div>
+
+  <!-- ---- Diálogo ---- -->
+  <div id="dialogue" class="hidden">
+    <div id="dialogue-box">
+      <div id="dialogue-portrait"><canvas id="portrait-canvas" width="48" height="48"></canvas><img id="portrait-img" alt="" /></div>
+      <div id="dialogue-body">
+        <div id="dialogue-speaker"></div>
+        <p id="dialogue-text"></p>
+        <div id="dialogue-choices"></div>
+        <div id="dialogue-footer">
+          <button id="dialogue-skip" class="text-btn">Saltar</button>
+          <button id="dialogue-next" class="text-btn primary">Continuar <span class="caret">▾</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- Diario / Journal ---- -->
+  <div id="journal" class="overlay hidden">
+    <div class="overlay-panel journal-panel">
+      <header class="journal-head">
+        <h2>El Diario</h2>
+        <button id="journal-close" class="icon-btn" aria-label="Close">✕</button>
+      </header>
+      <nav id="journal-tabs">
+        <button class="tab active" data-tab="quests">Misiones</button>
+        <button class="tab" data-tab="memories">Recuerdos</button>
+        <button class="tab" data-tab="reasons">23 Deseos</button>
+        <button class="tab" data-tab="places">Lugares</button>
+      </nav>
+      <div id="journal-content"></div>
+    </div>
+  </div>
+
+  <!-- ---- Visor de fotos / recuerdos ---- -->
+  <div id="viewer" class="overlay hidden">
+    <div class="polaroid">
+      <div class="polaroid-photo">
+        <img id="viewer-img" alt="" />
+        <div id="viewer-fallback" class="polaroid-fallback"></div>
+      </div>
+      <p id="viewer-caption" class="polaroid-caption"></p>
+      <button id="viewer-close" class="text-btn primary">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- ---- Menú principal / pausa ---- -->
+  <div id="menu" class="overlay">
+    <div class="menu-inner">
+      <p class="menu-eyebrow">Virginia · 1864 — forever</p>
+      <h1 class="menu-title">MYSTIC<span>FALLS</span></h1>
+      <p class="menu-sub" id="menu-sub">Una historia de cumpleaños</p>
+      <div class="menu-actions">
+        <button id="btn-continue" class="menu-btn hidden">Continuar</button>
+        <button id="btn-new" class="menu-btn primary">Nueva historia</button>
+        <button id="btn-resume" class="menu-btn hidden">Volver al juego</button>
+        <button id="btn-reset" class="menu-btn ghost hidden">Borrar progreso</button>
+      </div>
+      <div class="menu-toggles">
+        <button id="btn-music" class="toggle-btn" aria-pressed="true">♪ Música: sí</button>
+        <button id="btn-sfx" class="toggle-btn" aria-pressed="true">◆ Sonido: sí</button>
+      </div>
+      <p class="menu-foot">Fan project · sin fines comerciales · hecho con amor</p>
+    </div>
+  </div>
+
+  <!-- ---- Cinemática / final ---- -->
+  <div id="cinematic" class="hidden">
+    <div id="cine-content"></div>
+    <button id="cine-next" class="text-btn primary hidden">Continuar</button>
+  </div>
+
+  <!-- ---- Carta final ---- -->
+  <div id="letter" class="hidden">
+    <article id="letter-paper">
+      <h2 id="letter-title"></h2>
+      <div id="letter-body"></div>
+      <p id="letter-sign"></p>
+    </article>
+    <div id="letter-actions">
+      <button id="letter-close" class="text-btn primary">Volver a Mystic Falls</button>
+    </div>
+  </div>
+
+  <!-- ---- Avisos flotantes ---- -->
+  <div id="toast-stack" aria-live="polite"></div>
+
+  <!-- ---- Panel de debug ---- -->
+  <div id="debug-panel" class="hidden"></div>
+
+  <!-- ---- Pantalla de carga ---- -->
+  <div id="loading">
+    <div class="loading-inner">
+      <div class="moon"></div>
+      <p id="loading-text">Abriendo las puertas de Mystic Falls…</p>
+      <div class="loading-bar"><i id="loading-fill"></i></div>
+    </div>
+  </div>
+
+  <!-- ---- Aviso de "toca para empezar" (desbloquea audio) ---- -->
+  <div id="tap-start" class="overlay hidden">
+    <div class="tap-inner">
+      <p class="tap-glyph">✦</p>
+      <p class="tap-text">Toca para empezar</p>
+      <p class="tap-hint">Mejor con audífonos</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Phaser 3 desde CDN (funciona tal cual en GitHub Pages) -->
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

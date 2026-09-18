@@ -1,0 +1,1 @@
+La interfaz es HTML/CSS (css/style.css). Esta carpeta queda libre por si quieres anadir imagenes.

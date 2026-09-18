@@ -1,0 +1,4 @@
+Musica opcional. Si pones aqui un MP3 con uno de estos nombres, sustituye a la musica generada:
+  menu.mp3  town.mp3  boarding.mp3  grill.mp3  school.mp3  cemetery.mp3  woods.mp3  finale.mp3
+Si no hay archivo, el juego genera musica ambiental por codigo.
+Consejo: MP3 a 96-128 kbps para que cargue rapido en el celular.
